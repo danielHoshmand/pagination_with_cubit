@@ -1,15 +1,17 @@
-final class Section {
-  Section(
-    this.title,
-    this.items,
-  );
+import 'package:flutter/material.dart';
 
-  final List<Item> items;
-  final String title;
+final class Section<T> {
+  final List<Item<T>> items;
+  final SliverAppBar header;
+
+  Section({
+    required this.items,
+    required this.header,
+  });
 }
 
-final class Item {
-  Item(this.content);
+final class Item<T> {
+  final Widget Function(T value) paginationItemView;
 
-  final String content;
+  Item({required this.paginationItemView});
 }
