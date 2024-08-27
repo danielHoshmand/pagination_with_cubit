@@ -10,11 +10,14 @@ import 'package:pagination_with_cubit/presentation/section.dart';
 
 class PaginationView<Value> extends StatelessWidget {
   final ScrollController scrollController;
-  final List<Section> sections;
+  final Widget Function(Value value) paginationItemView;
+  final SliverAppBar header;
+
   PaginationView({
     super.key,
     required this.scrollController,
-    required this.sections,
+    required this.paginationItemView,
+    required this.header,
   });
 
   @override
@@ -37,7 +40,7 @@ class PaginationView<Value> extends StatelessWidget {
         return _loadingIndicator();
       }
 
-      List<Value> values = [];
+      List<Section<Value>> values = [];
       bool isLoading = false;
 
       if (state is PostLoading<Value>) {
@@ -50,18 +53,21 @@ class PaginationView<Value> extends StatelessWidget {
       return CustomScrollView(
         controller: scrollController,
         slivers: [
-          for (final section in sections)
+          for (var i = 0; i < values.length; i++)
             SliverMainAxisGroup(
               slivers: [
-                section.header,
+                SliverAppBar(
+                  title: Text(values[i].headerMessage),
+                ),
                 SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       if (index < values.length) {
-                        for (final item in section.items) {
-                          return item.paginationItemView(values[index]);
+                        for (final item in values[i].items) {
+                          return paginationItemView(item);
                         }
-                      } else if (index != values.length + 1) {
+                      } else if (index != values.length + 1 &&
+                          i == values.length) {
                         Timer(
                           const Duration(milliseconds: 30),
                           () {
@@ -72,6 +78,7 @@ class PaginationView<Value> extends StatelessWidget {
 
                         return _loadingIndicator();
                       }
+                      return null;
                     },
                     childCount: 20,
                   ),
