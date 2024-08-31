@@ -19,3 +19,11 @@ class PostLoading<T> extends PaginationState<T> {
     this.isFirstFetch = false,
   });
 }
+
+class PostLoadingMore<T> extends PaginationState<T> {
+  final List<Section<T>> oldValues;
+
+  PostLoadingMore({
+    required this.oldValues,
+  });
+}

@@ -8,7 +8,6 @@ class PostService {
 
   Future<List<dynamic>> fetchPosts(int page) async {
     try {
-      //await Future.delayed(Duration(seconds: 10));
       final response = await get(
           Uri.parse(base_url + 'posts?_limit=$FETCH_LIMIT&page=$page'));
       return jsonDecode(response.body) as List<dynamic>;

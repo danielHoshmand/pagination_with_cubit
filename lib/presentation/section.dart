@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 final class Section<T> {
   final List<T> items;
   final String headerMessage;

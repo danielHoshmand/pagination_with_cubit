@@ -13,8 +13,8 @@ class PaginationCubit<T, Rep extends IPaginationRepository>
 
   PaginationCubit(this.repository) : super(PostsInitial<T>());
 
-  void loadPosts() {
-    if (state is PostLoading<T>) {
+  void loadPosts({bool isMoreLoding = false}) {
+    if (state is PostLoading<T> || state is PostLoadingMore<T>) {
       return;
     }
     final currentSate = state;
@@ -24,10 +24,14 @@ class PaginationCubit<T, Rep extends IPaginationRepository>
     }
 
     emit(
-      PostLoading<T>(
-        oldValues: oldValues,
-        isFirstFetch: page == 1,
-      ),
+      isMoreLoding
+          ? PostLoadingMore<T>(
+              oldValues: oldValues,
+            )
+          : PostLoading<T>(
+              oldValues: oldValues,
+              isFirstFetch: page == 1,
+            ),
     );
 
     Timer(
@@ -41,7 +45,9 @@ class PaginationCubit<T, Rep extends IPaginationRepository>
                 return Section<T>(items: [value], headerMessage: 'Hello');
               },
             );
-            final values = (state as PostLoading<T>).oldValues;
+            final values = isMoreLoding
+                ? (state as PostLoadingMore<T>).oldValues
+                : (state as PostLoading<T>).oldValues;
             values.addAll(vals);
             emit(PostsLoaded(values: values));
           },

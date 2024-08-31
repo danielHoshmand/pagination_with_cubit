@@ -4,26 +4,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pagination_with_cubit/cubit/pagination_cubit.dart';
 import 'package:pagination_with_cubit/cubit/pagination_state.dart';
-import 'package:pagination_with_cubit/data/models/post_model.dart';
-import 'package:pagination_with_cubit/data/repositories/post_repository.dart';
+import 'package:pagination_with_cubit/data/repositories/pagination_repostiroy.dart';
 import 'package:pagination_with_cubit/presentation/section.dart';
 
-class PaginationView<Value> extends StatelessWidget {
+class PaginationView<Value, Rep extends IPaginationRepository>
+    extends StatelessWidget {
   final ScrollController scrollController;
-  final Widget Function(Value value) paginationItemView;
-  final SliverAppBar header;
+  final Widget Function(Value value) paginationItemViewBuilder;
+  final Widget Function(String message) hraderBuilder;
 
-  PaginationView({
+  const PaginationView({
     super.key,
     required this.scrollController,
-    required this.paginationItemView,
-    required this.header,
+    required this.paginationItemViewBuilder,
+    required this.hraderBuilder,
   });
 
   @override
   Widget build(BuildContext context) {
-    BlocProvider.of<PaginationCubit<PostModel, PostRepository>>(context)
-        .loadPosts();
+    BlocProvider.of<PaginationCubit<Value, Rep>>(context).loadPosts();
 
     return Scaffold(
       appBar: AppBar(
@@ -34,8 +33,8 @@ class PaginationView<Value> extends StatelessWidget {
   }
 
   Widget _paginationList() {
-    return BlocBuilder<PaginationCubit<Value, PostRepository>,
-        PaginationState<Value>>(builder: (context, state) {
+    return BlocBuilder<PaginationCubit<Value, Rep>, PaginationState<Value>>(
+        builder: (context, state) {
       if (state is PostLoading && (state as PostLoading<Value>).isFirstFetch) {
         return _loadingIndicator();
       }
@@ -48,6 +47,8 @@ class PaginationView<Value> extends StatelessWidget {
         isLoading = true;
       } else if (state is PostsLoaded<Value>) {
         values = state.values;
+      } else if (state is PostLoadingMore<Value>) {
+        values = state.oldValues;
       }
 
       return CustomScrollView(
@@ -56,18 +57,15 @@ class PaginationView<Value> extends StatelessWidget {
           for (var i = 0; i < values.length; i++)
             SliverMainAxisGroup(
               slivers: [
-                SliverAppBar(
-                  title: Text(values[i].headerMessage),
-                ),
+                hraderBuilder(values[i].headerMessage),
                 SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
-                      if (index < values.length) {
-                        for (final item in values[i].items) {
-                          return paginationItemView(item);
-                        }
-                      } else if (index != values.length + 1 &&
-                          i == values.length) {
+                      if (index < values[i].items.length) {
+                        return paginationItemViewBuilder(
+                            values[i].items[index]);
+                      } else if (i == values.length - 1 &&
+                          state is PostLoadingMore<Value>) {
                         Timer(
                           const Duration(milliseconds: 30),
                           () {
@@ -80,41 +78,23 @@ class PaginationView<Value> extends StatelessWidget {
                       }
                       return null;
                     },
-                    childCount: 20,
+                    childCount: values[i].items.length +
+                        ((i == values.length - 1) &&
+                                state is PostLoadingMore<Value>
+                            ? 1
+                            : 0),
                   ),
                 ),
               ],
             ),
         ],
       );
-
-      // return ListView.separated(
-      //   controller: scrollController,
-      //   itemBuilder: (context, index) {
-      //     if (index < values.length) {
-      //       return paginationItemView(values[index]);
-      //     } else {
-      //       Timer(Duration(milliseconds: 30), () {
-      //         scrollController
-      //             .jumpTo(scrollController.position.maxScrollExtent);
-      //       });
-
-      //       return _loadingIndicator();
-      //     }
-      //   },
-      //   separatorBuilder: (context, index) {
-      //     return Divider(
-      //       color: Colors.grey[400],
-      //     );
-      //   },
-      //   itemCount: values.length + (isLoading ? 1 : 0),
-      // );
     });
   }
 
   Widget _loadingIndicator() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
+    return const Padding(
+      padding: EdgeInsets.all(8.0),
       child: Center(child: CircularProgressIndicator()),
     );
   }
