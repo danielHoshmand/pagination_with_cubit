@@ -1,29 +1,27 @@
-import 'package:pagination_with_cubit/presentation/section.dart';
+abstract class PaginationState<H, T> {}
 
-abstract class PaginationState<T> {}
+class PostsInitial<H, T> extends PaginationState<H, T> {}
 
-class PostsInitial<T> extends PaginationState<T> {}
+class PostsLoaded<H, T> extends PaginationState<H, T> {
+  final Map<H, List<T>> items;
 
-class PostsLoaded<T> extends PaginationState<T> {
-  final List<Section<T>> values;
-
-  PostsLoaded({required this.values});
+  PostsLoaded({required this.items});
 }
 
-class PostLoading<T> extends PaginationState<T> {
-  final List<Section<T>> oldValues;
+class PostLoading<H, T> extends PaginationState<H, T> {
+  final Map<H, List<T>> oldItems;
   final bool isFirstFetch;
 
   PostLoading({
-    required this.oldValues,
+    required this.oldItems,
     this.isFirstFetch = false,
   });
 }
 
-class PostLoadingMore<T> extends PaginationState<T> {
-  final List<Section<T>> oldValues;
+class PostLoadingMore<H, T> extends PaginationState<H, T> {
+  final Map<H, List<T>> oldItems;
 
   PostLoadingMore({
-    required this.oldValues,
+    required this.oldItems,
   });
 }

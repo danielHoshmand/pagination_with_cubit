@@ -14,7 +14,7 @@ class LetterService {
             '$base_url?encFolderID=1GXOS4NrT2rJM8I9ntH31A&folderFlag=21&encStaffID=FSVCJcywBKM4TKsL-Qhyzg&pageNo=$page&pageSize=$FETCH_LIMIT&encPartitionID=null'),
         headers: {
           'Cookie':
-              'ASP.NET_SessionId=anoun21tjwqkxfsspr14buir%248G1WlHnV_1614huBZxLtbdEDzv6tntZK15XG78vIhN0%24; UserDeviceIdentifier=d2f89963-0bc7-4a8e-a6b8-4464493f43c9;',
+              'ASP.NET_SessionId=ksfup2vz0s5qpqya4icgx0uf%248G1WlHnV_1614huBZxLtbdEDzv6tntZK15XG78vIhN0%24; UserDeviceIdentifier=d2f89963-0bc7-4a8e-a6b8-4464493f43c9;',
           'User-Agent': 'Android SDK built for x86_64 Android',
         },
       );

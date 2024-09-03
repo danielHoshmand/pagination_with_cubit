@@ -1,4 +1,9 @@
-class DraftModel {
+import 'package:equatable/equatable.dart';
+import 'package:pagination_with_cubit/utils/helper/sectionabale.dart';
+
+import '../../utils/utilities.dart';
+
+class DraftModel with Sectionabale<String> {
   final String draftInstanceId;
   final String draftId;
   final String sender;
@@ -22,4 +27,9 @@ class DraftModel {
         date = json['Date'],
         subject = json['Subject'] ?? '',
         receivers = json['Receivers'] ?? '';
+
+  @override
+  String getHeader() {
+    return date.substring(0, 10);
+  }
 }

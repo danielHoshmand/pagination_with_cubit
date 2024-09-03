@@ -5,24 +5,26 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pagination_with_cubit/cubit/pagination_cubit.dart';
 import 'package:pagination_with_cubit/cubit/pagination_state.dart';
 import 'package:pagination_with_cubit/data/repositories/pagination_repostiroy.dart';
-import 'package:pagination_with_cubit/presentation/section.dart';
+import 'package:collection/collection.dart';
 
-class PaginationView<Value, Rep extends IPaginationRepository>
-    extends StatelessWidget {
+import '../utils/helper/sectionabale.dart';
+
+class PaginationView<H, T extends Sectionabale<H>,
+    Rep extends IPaginationRepository<T>> extends StatelessWidget {
   final ScrollController scrollController;
-  final Widget Function(Value value) paginationItemViewBuilder;
-  final Widget Function(String message) hraderBuilder;
+  final Widget Function(T value) paginationItemViewBuilder;
+  final Widget Function(H message)? headerBuilder;
 
   const PaginationView({
     super.key,
     required this.scrollController,
     required this.paginationItemViewBuilder,
-    required this.hraderBuilder,
+    this.headerBuilder,
   });
 
   @override
   Widget build(BuildContext context) {
-    BlocProvider.of<PaginationCubit<Value, Rep>>(context).loadPosts();
+    BlocProvider.of<PaginationCubit<H, T, Rep>>(context).loadPosts();
 
     return Scaffold(
       appBar: AppBar(
@@ -33,69 +35,66 @@ class PaginationView<Value, Rep extends IPaginationRepository>
   }
 
   Widget _paginationList() {
-    return BlocBuilder<PaginationCubit<Value, Rep>, PaginationState<Value>>(
+    return BlocBuilder<PaginationCubit<H, T, Rep>, PaginationState>(
         builder: (context, state) {
-      if (state is PostLoading && (state as PostLoading<Value>).isFirstFetch) {
+      if (state is PostLoading && (state as PostLoading<H, T>).isFirstFetch) {
         return _loadingIndicator();
       }
 
-      List<Section<Value>> values = [];
-      bool isLoading = false;
+      Map<H, List<T>> values = <H, List<T>>{};
 
-      if (state is PostLoading<Value>) {
-        values = state.oldValues;
-        isLoading = true;
-      } else if (state is PostsLoaded<Value>) {
-        values = state.values;
-      } else if (state is PostLoadingMore<Value>) {
-        values = state.oldValues;
+      if (state is PostLoading<H, T>) {
+        values = state.oldItems;
+      } else if (state is PostsLoaded<H, T>) {
+        values = state.items;
       }
 
       return CustomScrollView(
-        controller: scrollController,
-        slivers: [
-          for (var i = 0; i < values.length; i++)
-            SliverMainAxisGroup(
-              slivers: [
-                hraderBuilder(values[i].headerMessage),
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      if (index < values[i].items.length) {
-                        return paginationItemViewBuilder(
-                            values[i].items[index]);
-                      } else if (i == values.length - 1 &&
-                          state is PostLoadingMore<Value>) {
-                        Timer(
-                          const Duration(milliseconds: 30),
-                          () {
-                            scrollController.jumpTo(
-                                scrollController.position.maxScrollExtent);
-                          },
-                        );
-
-                        return _loadingIndicator();
-                      }
-                      return null;
-                    },
-                    childCount: values[i].items.length +
-                        ((i == values.length - 1) &&
-                                state is PostLoadingMore<Value>
-                            ? 1
-                            : 0),
-                  ),
-                ),
-              ],
-            ),
-        ],
-      );
+          physics: AlwaysScrollableScrollPhysics(),
+          controller: scrollController,
+          slivers: values.isEmpty
+              ? [
+                  SliverFillRemaining(
+                    child: Center(
+                      child: Text('Empty list!'),
+                    ),
+                  )
+                ]
+              : (state is PostLoading<H, T>
+                  ? createSections(values, state) +
+                      [_loadingIndicatorWithSliver()]
+                  : createSections(values, state)));
     });
   }
 
+  List<SliverMainAxisGroup> createSections(
+      Map<H, List<T>> values, PaginationState state) {
+    return values.keys.mapIndexed(
+      (i, element) {
+        return SliverMainAxisGroup(
+          slivers: [
+            headerBuilder == null
+                ? const SliverToBoxAdapter()
+                : headerBuilder!(element),
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  return paginationItemViewBuilder(values[element]![index]);
+                },
+                childCount: values[element]!.length,
+              ),
+            ),
+          ],
+        );
+      },
+    ).toList();
+  }
+
+  SliverMainAxisGroup _loadingIndicatorWithSliver() {
+    return SliverMainAxisGroup(slivers: [_loadingIndicator()]);
+  }
+
   Widget _loadingIndicator() {
-    return const Padding(
-      padding: EdgeInsets.all(8.0),
-      child: Center(child: CircularProgressIndicator()),
-    );
+    return Center(child: CircularProgressIndicator());
   }
 }

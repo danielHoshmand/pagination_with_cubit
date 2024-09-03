@@ -1,10 +1,8 @@
 import 'package:pagination_with_cubit/data/models/draft_model.dart';
-import 'package:pagination_with_cubit/data/models/post_model.dart';
 import 'package:pagination_with_cubit/data/repositories/pagination_repostiroy.dart';
 import 'package:pagination_with_cubit/data/services/draft_service.dart';
-import 'package:pagination_with_cubit/data/services/post_service.dart';
 
-class DraftRepository extends IPaginationRepository {
+class DraftRepository extends IPaginationRepository<DraftModel> {
   final LetterService service;
 
   DraftRepository({required this.service});

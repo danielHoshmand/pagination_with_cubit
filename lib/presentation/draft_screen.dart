@@ -25,15 +25,16 @@ class _DraftViewState extends State<DraftView> {
 
   @override
   Widget build(BuildContext context) {
-    BlocProvider.of<PaginationCubit<DraftModel, DraftRepository>>(context)
+    BlocProvider.of<PaginationCubit<String, DraftModel, DraftRepository>>(
+            context)
         .loadPosts();
 
-    return PaginationView<DraftModel, DraftRepository>(
+    return PaginationView<String, DraftModel, DraftRepository>(
       scrollController: scrollController,
       paginationItemViewBuilder: (value) {
         return _letter(value, context);
       },
-      hraderBuilder: (message) {
+      headerBuilder: (message) {
         return SliverAppBar(
           backgroundColor: Color.fromARGB(255, 192, 0, 0),
           pinned: true,
@@ -60,14 +61,16 @@ class _DraftViewState extends State<DraftView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            letter.sender,
+            letter.subject,
             style: const TextStyle(
                 fontSize: 18.0,
                 color: Colors.black,
                 fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10.0),
-          Text(letter.receivers)
+          Text(letter.sender),
+          const SizedBox(height: 10.0),
+          Text(DateTime.parse(letter.date).toString()),
         ],
       ),
     );
@@ -77,8 +80,9 @@ class _DraftViewState extends State<DraftView> {
     scrollController.addListener(() {
       if (scrollController.position.atEdge) {
         if (scrollController.position.pixels != 0) {
-          BlocProvider.of<PaginationCubit<DraftModel, DraftRepository>>(context)
-              .loadPosts(isMoreLoding: true);
+          BlocProvider.of<PaginationCubit<String, DraftModel, DraftRepository>>(
+                  context)
+              .loadPosts();
         }
       }
     });

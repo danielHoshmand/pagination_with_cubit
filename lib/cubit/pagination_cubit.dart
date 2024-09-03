@@ -2,56 +2,56 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pagination_with_cubit/cubit/pagination_state.dart';
-import 'package:pagination_with_cubit/presentation/section.dart';
 
 import '../data/repositories/pagination_repostiroy.dart';
+import '../utils/helper/sectionabale.dart';
+import "package:collection/collection.dart";
 
-class PaginationCubit<T, Rep extends IPaginationRepository>
-    extends Cubit<PaginationState<T>> {
+class PaginationCubit<H, T extends Sectionabale<H>,
+    Rep extends IPaginationRepository<T>> extends Cubit<PaginationState> {
   int page = 1;
   final Rep repository;
 
-  PaginationCubit(this.repository) : super(PostsInitial<T>());
+  PaginationCubit(this.repository) : super(PostsInitial<H, T>());
 
-  void loadPosts({bool isMoreLoding = false}) {
-    if (state is PostLoading<T> || state is PostLoadingMore<T>) {
+  void loadPosts() {
+    if (state is PostLoading<H, T>) {
       return;
     }
     final currentSate = state;
-    var oldValues = <Section<T>>[];
-    if (currentSate is PostsLoaded<T>) {
-      oldValues = currentSate.values;
+    var oldValues = <H, List<T>>{};
+    if (currentSate is PostsLoaded<H, T>) {
+      oldValues = currentSate.items;
     }
 
     emit(
-      isMoreLoding
-          ? PostLoadingMore<T>(
-              oldValues: oldValues,
-            )
-          : PostLoading<T>(
-              oldValues: oldValues,
-              isFirstFetch: page == 1,
-            ),
+      PostLoading<H, T>(
+        oldItems: oldValues,
+        isFirstFetch: page == 1,
+      ),
     );
 
     Timer(
       const Duration(seconds: 5),
       () async {
-        repository.fetchData(page).then(
-          (newValues) {
-            page++;
-            var vals = newValues.map(
-              (value) {
-                return Section<T>(items: [value], headerMessage: 'Hello');
-              },
-            );
-            final values = isMoreLoding
-                ? (state as PostLoadingMore<T>).oldValues
-                : (state as PostLoading<T>).oldValues;
-            values.addAll(vals);
-            emit(PostsLoaded(values: values));
+        var data = await repository.fetchData(page);
+
+        final newItems = data.groupListsBy(
+          (element) => element.getHeader(),
+        );
+
+        page++;
+        final oldItems = (state as PostLoading<H, T>).oldItems;
+        newItems.forEach(
+          (header, items) {
+            if (oldItems.containsKey(header)) {
+              oldItems[header]?.addAll(items);
+            } else {
+              oldItems[header] = items;
+            }
           },
         );
+        emit(PostsLoaded<H, T>(items: oldItems));
       },
     );
   }

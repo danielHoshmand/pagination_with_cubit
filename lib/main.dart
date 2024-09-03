@@ -39,8 +39,9 @@ class PaginationWithCubitApp extends StatelessWidget {
         create: (context) =>
             //     PaginationCubit<PostModel, PostRepository>(postRepository),
             // child: PostView(),
-            PaginationCubit<DraftModel, DraftRepository>(letterRepository),
-        child: DraftView(),
+            PaginationCubit<String, DraftModel, DraftRepository>(
+                letterRepository),
+        child: const DraftView(),
       ),
     );
   }
