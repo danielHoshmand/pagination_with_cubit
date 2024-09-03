@@ -63,24 +63,29 @@ class PaginationView<HEADER, MODEL extends Sectionabale<HEADER>, KEY,
         values = state.oldItems;
       }
 
-      return CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          controller: scrollController,
-          slivers: values.isEmpty
-              ? [
-                  const SliverFillRemaining(
-                    child: Center(
-                      child: Text('Empty list!'),
-                    ),
-                  )
-                ]
-              : state is PaginationLoadError<HEADER, MODEL, KEY>
-                  ? createSections(values, state) +
-                      [loadMoreErrorSliverBuider(state.message)]
-                  : (state is PaginationLoading<HEADER, MODEL, KEY>
-                      ? createSections(values, state) +
-                          [_loadingIndicatorWithSliver()]
-                      : createSections(values, state)));
+      return RefreshIndicator(
+        onRefresh: () async {
+          await Future.delayed(const Duration(seconds: 5));
+        },
+        child: CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            controller: scrollController,
+            slivers: values.isEmpty
+                ? [
+                    const SliverFillRemaining(
+                      child: Center(
+                        child: Text('Empty list!'),
+                      ),
+                    )
+                  ]
+                : state is PaginationLoadError<HEADER, MODEL, KEY>
+                    ? createSections(values, state) +
+                        [loadMoreErrorSliverBuider(state.message)]
+                    : (state is PaginationLoading<HEADER, MODEL, KEY>
+                        ? createSections(values, state) +
+                            [_loadingIndicatorWithSliver()]
+                        : createSections(values, state))),
+      );
     });
   }
 
