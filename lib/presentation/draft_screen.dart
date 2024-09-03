@@ -52,6 +52,28 @@ class _DraftViewState extends State<DraftView> {
           ),
         );
       },
+      errorBuider: (message) {
+        return Center(
+          child: Text(message),
+        );
+      },
+      loadMoreErrorSliverBuider: (message) {
+        return SliverMainAxisGroup(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Center(
+                child: Text(
+                  message,
+                  style: TextStyle(
+                    fontSize: 16.0,
+                    color: Colors.red,
+                  ),
+                ),
+              ),
+            )
+          ],
+        );
+      },
     );
   }
 

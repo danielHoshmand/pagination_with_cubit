@@ -11,7 +11,7 @@ class DraftRepository<I> extends IPaginationRepository<DraftModel, I> {
 
   @override
   Future<List<DraftModel>> fetchData(I key) async {
-    final draft = await service.fetchLetters(key);
+    final draft = await service.fetchDraft(key);
     return draft
         .map(
           (item) => DraftModel.fromJson(item),

@@ -15,6 +15,8 @@ class PaginationView<HEADER, MODEL extends Sectionabale<HEADER>, KEY,
   final Widget Function(MODEL value) paginationItemViewBuilder;
   final Widget Function(HEADER message)? headerBuilder;
   final KEY initialKey;
+  final Widget Function(String message) errorBuider;
+  final SliverMainAxisGroup Function(String message) loadMoreErrorSliverBuider;
 
   const PaginationView({
     super.key,
@@ -22,6 +24,8 @@ class PaginationView<HEADER, MODEL extends Sectionabale<HEADER>, KEY,
     required this.paginationItemViewBuilder,
     this.headerBuilder,
     required this.initialKey,
+    required this.errorBuider,
+    required this.loadMoreErrorSliverBuider,
   });
 
   @override
@@ -31,7 +35,7 @@ class PaginationView<HEADER, MODEL extends Sectionabale<HEADER>, KEY,
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Posts"),
+        title: const Text("Posts"),
       ),
       body: _paginationList(),
     );
@@ -40,17 +44,23 @@ class PaginationView<HEADER, MODEL extends Sectionabale<HEADER>, KEY,
   Widget _paginationList() {
     return BlocBuilder<PaginationCubit<HEADER, MODEL, KEY, REP>,
         PaginationState>(builder: (context, state) {
-      if (state is PostLoading &&
-          (state as PostLoading<HEADER, MODEL, KEY>).isFirstFetch) {
+      if (state is PaginationLoading &&
+          (state as PaginationLoading<HEADER, MODEL, KEY>).isFirstFetch) {
         return _loadingIndicator();
+      }
+
+      if (state is PaginationLoadError && state.isInitialLoad) {
+        return errorBuider(state.message);
       }
 
       Map<HEADER, List<MODEL>> values = <HEADER, List<MODEL>>{};
 
-      if (state is PostLoading<HEADER, MODEL, KEY>) {
+      if (state is PaginationLoading<HEADER, MODEL, KEY>) {
         values = state.oldItems;
-      } else if (state is PostsLoaded<HEADER, MODEL, KEY>) {
+      } else if (state is PaginationLoaded<HEADER, MODEL, KEY>) {
         values = state.items;
+      } else if (state is PaginationLoadError<HEADER, MODEL, KEY>) {
+        values = state.oldItems;
       }
 
       return CustomScrollView(
@@ -64,10 +74,13 @@ class PaginationView<HEADER, MODEL extends Sectionabale<HEADER>, KEY,
                     ),
                   )
                 ]
-              : (state is PostLoading<HEADER, MODEL, KEY>
+              : state is PaginationLoadError<HEADER, MODEL, KEY>
                   ? createSections(values, state) +
-                      [_loadingIndicatorWithSliver()]
-                  : createSections(values, state)));
+                      [loadMoreErrorSliverBuider(state.message)]
+                  : (state is PaginationLoading<HEADER, MODEL, KEY>
+                      ? createSections(values, state) +
+                          [_loadingIndicatorWithSliver()]
+                      : createSections(values, state)));
     });
   }
 

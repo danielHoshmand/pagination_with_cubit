@@ -7,7 +7,7 @@ class LetterService<T> {
   final base_url =
       'http://rc.didgah.chargoon.net/api/didgah/automation/documentmanager/Version/V20240630/Folder/Draft/GetAll/';
 
-  Future<List<dynamic>> fetchLetters(T page) async {
+  Future<List<dynamic>> fetchDraft(T page) async {
     try {
       final response = await http.get(
         Uri.parse(
@@ -20,7 +20,7 @@ class LetterService<T> {
       );
       return jsonDecode(response.body) as List<dynamic>;
     } catch (e) {
-      return [];
+      throw Exception();
     }
   }
 }
