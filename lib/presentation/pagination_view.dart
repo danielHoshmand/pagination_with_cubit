@@ -9,22 +9,25 @@ import 'package:collection/collection.dart';
 
 import '../utils/helper/sectionabale.dart';
 
-class PaginationView<H, T extends Sectionabale<H>,
-    Rep extends IPaginationRepository<T>> extends StatelessWidget {
+class PaginationView<HEADER, MODEL extends Sectionabale<HEADER>, KEY,
+    REP extends IPaginationRepository<MODEL, KEY>> extends StatelessWidget {
   final ScrollController scrollController;
-  final Widget Function(T value) paginationItemViewBuilder;
-  final Widget Function(H message)? headerBuilder;
+  final Widget Function(MODEL value) paginationItemViewBuilder;
+  final Widget Function(HEADER message)? headerBuilder;
+  final KEY initialKey;
 
   const PaginationView({
     super.key,
     required this.scrollController,
     required this.paginationItemViewBuilder,
     this.headerBuilder,
+    required this.initialKey,
   });
 
   @override
   Widget build(BuildContext context) {
-    BlocProvider.of<PaginationCubit<H, T, Rep>>(context).loadPosts();
+    BlocProvider.of<PaginationCubit<HEADER, MODEL, KEY, REP>>(context)
+        .loadPosts();
 
     return Scaffold(
       appBar: AppBar(
@@ -35,32 +38,33 @@ class PaginationView<H, T extends Sectionabale<H>,
   }
 
   Widget _paginationList() {
-    return BlocBuilder<PaginationCubit<H, T, Rep>, PaginationState>(
-        builder: (context, state) {
-      if (state is PostLoading && (state as PostLoading<H, T>).isFirstFetch) {
+    return BlocBuilder<PaginationCubit<HEADER, MODEL, KEY, REP>,
+        PaginationState>(builder: (context, state) {
+      if (state is PostLoading &&
+          (state as PostLoading<HEADER, MODEL, KEY>).isFirstFetch) {
         return _loadingIndicator();
       }
 
-      Map<H, List<T>> values = <H, List<T>>{};
+      Map<HEADER, List<MODEL>> values = <HEADER, List<MODEL>>{};
 
-      if (state is PostLoading<H, T>) {
+      if (state is PostLoading<HEADER, MODEL, KEY>) {
         values = state.oldItems;
-      } else if (state is PostsLoaded<H, T>) {
+      } else if (state is PostsLoaded<HEADER, MODEL, KEY>) {
         values = state.items;
       }
 
       return CustomScrollView(
-          physics: AlwaysScrollableScrollPhysics(),
+          physics: const AlwaysScrollableScrollPhysics(),
           controller: scrollController,
           slivers: values.isEmpty
               ? [
-                  SliverFillRemaining(
+                  const SliverFillRemaining(
                     child: Center(
                       child: Text('Empty list!'),
                     ),
                   )
                 ]
-              : (state is PostLoading<H, T>
+              : (state is PostLoading<HEADER, MODEL, KEY>
                   ? createSections(values, state) +
                       [_loadingIndicatorWithSliver()]
                   : createSections(values, state)));
@@ -68,7 +72,7 @@ class PaginationView<H, T extends Sectionabale<H>,
   }
 
   List<SliverMainAxisGroup> createSections(
-      Map<H, List<T>> values, PaginationState state) {
+      Map<HEADER, List<MODEL>> values, PaginationState state) {
     return values.keys.mapIndexed(
       (i, element) {
         return SliverMainAxisGroup(
@@ -91,10 +95,15 @@ class PaginationView<H, T extends Sectionabale<H>,
   }
 
   SliverMainAxisGroup _loadingIndicatorWithSliver() {
-    return SliverMainAxisGroup(slivers: [_loadingIndicator()]);
+    return SliverMainAxisGroup(
+        slivers: [SliverToBoxAdapter(child: _loadingIndicator())]);
   }
 
   Widget _loadingIndicator() {
-    return Center(child: CircularProgressIndicator());
+    return const Center(
+        child: Padding(
+      padding: EdgeInsets.all(8.0),
+      child: CircularProgressIndicator(),
+    ));
   }
 }

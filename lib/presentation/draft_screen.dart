@@ -25,12 +25,14 @@ class _DraftViewState extends State<DraftView> {
 
   @override
   Widget build(BuildContext context) {
-    BlocProvider.of<PaginationCubit<String, DraftModel, DraftRepository>>(
+    BlocProvider.of<
+                PaginationCubit<String, DraftModel, int, DraftRepository<int>>>(
             context)
         .loadPosts();
 
-    return PaginationView<String, DraftModel, DraftRepository>(
+    return PaginationView<String, DraftModel, int, DraftRepository<int>>(
       scrollController: scrollController,
+      initialKey: 0,
       paginationItemViewBuilder: (value) {
         return _letter(value, context);
       },
@@ -80,8 +82,9 @@ class _DraftViewState extends State<DraftView> {
     scrollController.addListener(() {
       if (scrollController.position.atEdge) {
         if (scrollController.position.pixels != 0) {
-          BlocProvider.of<PaginationCubit<String, DraftModel, DraftRepository>>(
-                  context)
+          BlocProvider.of<
+                  PaginationCubit<String, DraftModel, int,
+                      DraftRepository<int>>>(context)
               .loadPosts();
         }
       }

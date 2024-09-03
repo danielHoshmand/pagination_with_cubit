@@ -7,41 +7,47 @@ import '../data/repositories/pagination_repostiroy.dart';
 import '../utils/helper/sectionabale.dart';
 import "package:collection/collection.dart";
 
-class PaginationCubit<H, T extends Sectionabale<H>,
-    Rep extends IPaginationRepository<T>> extends Cubit<PaginationState> {
-  int page = 1;
+class PaginationCubit<H, T extends Sectionabale<H>, I,
+    Rep extends IPaginationRepository<T, I>> extends Cubit<PaginationState> {
+  I page;
+  final I Function(I value) newKey;
   final Rep repository;
 
-  PaginationCubit(this.repository) : super(PostsInitial<H, T>());
+  PaginationCubit({
+    required this.page,
+    required this.newKey,
+    required this.repository,
+  }) : super(PostsInitial<H, T, I>(key: page));
 
   void loadPosts() {
-    if (state is PostLoading<H, T>) {
+    if (state is PostLoading<H, T, I>) {
       return;
     }
     final currentSate = state;
     var oldValues = <H, List<T>>{};
-    if (currentSate is PostsLoaded<H, T>) {
+    var key = page;
+    if (currentSate is PostsLoaded<H, T, I>) {
       oldValues = currentSate.items;
+      key = newKey(currentSate.key);
     }
 
     emit(
-      PostLoading<H, T>(
+      PostLoading<H, T, I>(
         oldItems: oldValues,
-        isFirstFetch: page == 1,
+        key: key,
+        isFirstFetch: key == 0,
       ),
     );
 
     Timer(
       const Duration(seconds: 5),
       () async {
-        var data = await repository.fetchData(page);
+        var data = await repository.fetchData(key);
 
         final newItems = data.groupListsBy(
           (element) => element.getHeader(),
         );
-
-        page++;
-        final oldItems = (state as PostLoading<H, T>).oldItems;
+        final oldItems = (state as PostLoading<H, T, I>).oldItems;
         newItems.forEach(
           (header, items) {
             if (oldItems.containsKey(header)) {
@@ -51,7 +57,10 @@ class PaginationCubit<H, T extends Sectionabale<H>,
             }
           },
         );
-        emit(PostsLoaded<H, T>(items: oldItems));
+        emit(PostsLoaded<H, T, I>(
+          items: oldItems,
+          key: key,
+        ));
       },
     );
   }

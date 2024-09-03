@@ -1,3 +1,3 @@
-abstract class IPaginationRepository<T> {
-  Future<List<T>> fetchData(int page);
+abstract class IPaginationRepository<T, I> {
+  Future<List<T>> fetchData(I key);
 }
