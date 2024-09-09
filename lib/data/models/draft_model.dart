@@ -1,7 +1,6 @@
-import 'package:equatable/equatable.dart';
 import 'package:pagination_with_cubit/utils/helper/sectionabale.dart';
 
-import '../../utils/utilities.dart';
+import 'request_model.dart';
 
 class DraftModel with Sectionabale<String> {
   final String draftInstanceId;

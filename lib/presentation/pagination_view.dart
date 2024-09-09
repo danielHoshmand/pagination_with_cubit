@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pagination_with_cubit/cubit/pagination_cubit.dart';
@@ -7,6 +5,7 @@ import 'package:pagination_with_cubit/cubit/pagination_state.dart';
 import 'package:pagination_with_cubit/data/repositories/pagination_repostiroy.dart';
 import 'package:collection/collection.dart';
 
+import '../shimmer/loading.dart';
 import '../utils/helper/sectionabale.dart';
 
 class PaginationView<HEADER, MODEL extends Sectionabale<HEADER>, KEY,
@@ -17,6 +16,7 @@ class PaginationView<HEADER, MODEL extends Sectionabale<HEADER>, KEY,
   final KEY initialKey;
   final Widget Function(String message) errorBuider;
   final SliverMainAxisGroup Function(String message) loadMoreErrorSliverBuider;
+  final Function() onRefresh;
 
   const PaginationView({
     super.key,
@@ -26,6 +26,7 @@ class PaginationView<HEADER, MODEL extends Sectionabale<HEADER>, KEY,
     required this.initialKey,
     required this.errorBuider,
     required this.loadMoreErrorSliverBuider,
+    required this.onRefresh,
   });
 
   @override
@@ -46,7 +47,10 @@ class PaginationView<HEADER, MODEL extends Sectionabale<HEADER>, KEY,
         PaginationState>(builder: (context, state) {
       if (state is PaginationLoading &&
           (state as PaginationLoading<HEADER, MODEL, KEY>).isFirstFetch) {
-        return _loadingIndicator();
+        return Loading(
+          showShimmer: true,
+        );
+        //return _loadingIndicator();
       }
 
       if (state is PaginationLoadError && state.isInitialLoad) {
@@ -65,7 +69,7 @@ class PaginationView<HEADER, MODEL extends Sectionabale<HEADER>, KEY,
 
       return RefreshIndicator(
         onRefresh: () async {
-          await Future.delayed(const Duration(seconds: 5));
+          await onRefresh();
         },
         child: CustomScrollView(
             physics: const BouncingScrollPhysics(),
@@ -113,15 +117,7 @@ class PaginationView<HEADER, MODEL extends Sectionabale<HEADER>, KEY,
   }
 
   SliverMainAxisGroup _loadingIndicatorWithSliver() {
-    return SliverMainAxisGroup(
-        slivers: [SliverToBoxAdapter(child: _loadingIndicator())]);
-  }
-
-  Widget _loadingIndicator() {
-    return const Center(
-        child: Padding(
-      padding: EdgeInsets.all(8.0),
-      child: CircularProgressIndicator(),
-    ));
+    return const SliverMainAxisGroup(
+        slivers: [SliverToBoxAdapter(child: Loading())]);
   }
 }

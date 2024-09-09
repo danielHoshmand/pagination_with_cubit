@@ -4,17 +4,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pagination_with_cubit/cubit/pagination_cubit.dart';
 import 'package:pagination_with_cubit/data/models/draft_model.dart';
+import 'package:pagination_with_cubit/data/models/notification/alert_model.dart';
+import 'package:pagination_with_cubit/data/models/notification/alerts_model.dart';
 import 'package:pagination_with_cubit/data/repositories/draft_repository.dart';
+import 'package:pagination_with_cubit/data/repositories/notification_repository.dart';
 import 'package:pagination_with_cubit/presentation/pagination_view.dart';
 
-class DraftView extends StatefulWidget {
-  const DraftView({super.key});
+import '../data/models/notification/alert_request_model.dart';
+
+class NotificationScreen extends StatefulWidget {
+  const NotificationScreen({super.key});
 
   @override
-  State<DraftView> createState() => _DraftViewState();
+  State<NotificationScreen> createState() => _NotificationScreenState();
 }
 
-class _DraftViewState extends State<DraftView> {
+class _NotificationScreenState extends State<NotificationScreen> {
   final scrollController = ScrollController();
 
   @override
@@ -26,15 +31,16 @@ class _DraftViewState extends State<DraftView> {
   @override
   Widget build(BuildContext context) {
     BlocProvider.of<
-                PaginationCubit<String, DraftModel, int, DraftRepository<int>>>(
-            context)
+            PaginationCubit<String, AlertModel, AlertRequestModel,
+                NotificationRepository<AlertRequestModel>>>(context)
         .loadPosts();
 
-    return PaginationView<String, DraftModel, int, DraftRepository<int>>(
+    return PaginationView<String, AlertModel, AlertRequestModel,
+        NotificationRepository<AlertRequestModel>>(
       scrollController: scrollController,
-      initialKey: 0,
+      initialKey: AlertRequestModel(PageSize: 20),
       paginationItemViewBuilder: (value) {
-        return _letter(value, context);
+        return _notification(value, context);
       },
       headerBuilder: (message) {
         return SliverAppBar(
@@ -80,7 +86,7 @@ class _DraftViewState extends State<DraftView> {
     );
   }
 
-  Widget _letter(DraftModel letter, BuildContext context) {
+  Widget _notification(AlertModel letter, BuildContext context) {
     return Container(
       width: MediaQuery.of(context).size.width,
       margin: const EdgeInsets.all(10.0),
@@ -88,16 +94,16 @@ class _DraftViewState extends State<DraftView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            letter.subject,
+            letter.id.toString(),
             style: const TextStyle(
                 fontSize: 18.0,
                 color: Colors.black,
                 fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10.0),
-          Text(letter.sender),
+          Text(letter.date.toString()),
           const SizedBox(height: 10.0),
-          Text(DateTime.parse(letter.date).toString()),
+          Text(DateTime.parse(letter.date!).toString()),
         ],
       ),
     );
@@ -115,8 +121,8 @@ class _DraftViewState extends State<DraftView> {
 
   _loadPost() {
     BlocProvider.of<
-                PaginationCubit<String, DraftModel, int, DraftRepository<int>>>(
-            context)
+            PaginationCubit<String, AlertModel, AlertRequestModel,
+                NotificationRepository<AlertRequestModel>>>(context)
         .loadPosts();
   }
 }
