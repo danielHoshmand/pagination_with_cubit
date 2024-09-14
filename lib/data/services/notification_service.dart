@@ -1,27 +1,29 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:pagination_with_cubit/data/models/request_model.dart';
+import 'package:pagination_with_cubit/data/models/notification/alert_request_model.dart';
+import 'package:pagination_with_cubit/data/models/notification/alerts_model.dart';
 
-class NotificationService<REQUEST extends RequestModel, MODEL> {
-  static const FETCH_LIMIT = 15;
-  final base_url =
-      'http://r401a203.didgah.chargoon.net/api/didgah/core/common/Version/V20231130/alert/alert/GetPagedAlerts';
+class NotificationService {
+  static const fetchLimit = 15;
+  final baseUrl =
+      'http://rc.didgah.chargoon.net/api/didgah/core/common/Version/V20231130/alert/alert/GetPagedAlerts';
 
-  Future<dynamic> fetchNotification(REQUEST request) async {
+  Future<dynamic> fetchNotification(AlertRequestModel request) async {
     try {
       final response = await http.post(
-        Uri.parse(base_url),
+        Uri.parse(baseUrl),
         body: jsonEncode(request.toJson()),
         headers: {
           "Accept": "application/json",
           'Cookie':
-              'ASP.NET_SessionId=2jp5vlpnocv4ggblxutgc2s4%24empty%24; UserDeviceIdentifier=6ceb58f4-eee8-4841-a5b3-121dd7c8ff58;',
+              'ASP.NET_SessionId=abk0d4ydvu02beq4jeywzkii%248G1WlHnV_1614huBZxLtbdEDzv6tntZK15XG78vIhN0%24; UserDeviceIdentifier=5659cf6a-9b0d-48cf-8293-a8db635b660c;',
           'User-Agent': 'Android SDK built for x86_64 Android',
           'Content-Type': 'application/json',
         },
       );
-      return jsonDecode(response.body) as List<dynamic>;
+      var paresed = jsonDecode(response.body).cast<String, dynamic>();
+      return AlertsModel.fromJson(paresed);
     } catch (e) {
       throw Exception();
     }

@@ -2,21 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pagination_with_cubit/cubit/pagination_cubit.dart';
 import 'package:pagination_with_cubit/cubit/pagination_state.dart';
-import 'package:pagination_with_cubit/data/repositories/pagination_repostiroy.dart';
 import 'package:collection/collection.dart';
+import 'package:pagination_with_cubit/cubit/sub_cubit/alert_cubit.dart';
 
 import '../shimmer/loading.dart';
 import '../utils/helper/sectionabale.dart';
 
 class PaginationView<HEADER, MODEL extends Sectionabale<HEADER>, KEY,
-    REP extends IPaginationRepository<MODEL, KEY>> extends StatelessWidget {
+    CUBIT extends PaginationCubit<HEADER, MODEL, KEY>> extends StatelessWidget {
   final ScrollController scrollController;
   final Widget Function(MODEL value) paginationItemViewBuilder;
   final Widget Function(HEADER message)? headerBuilder;
   final KEY initialKey;
   final Widget Function(String message) errorBuider;
   final SliverMainAxisGroup Function(String message) loadMoreErrorSliverBuider;
-  final Function() onRefresh;
+  final RefreshCallback onRefresh;
 
   const PaginationView({
     super.key,
@@ -31,8 +31,7 @@ class PaginationView<HEADER, MODEL extends Sectionabale<HEADER>, KEY,
 
   @override
   Widget build(BuildContext context) {
-    BlocProvider.of<PaginationCubit<HEADER, MODEL, KEY, REP>>(context)
-        .loadPosts();
+    BlocProvider.of<CUBIT>(context).loadPosts(initialKey);
 
     return Scaffold(
       appBar: AppBar(
@@ -43,11 +42,10 @@ class PaginationView<HEADER, MODEL extends Sectionabale<HEADER>, KEY,
   }
 
   Widget _paginationList() {
-    return BlocBuilder<PaginationCubit<HEADER, MODEL, KEY, REP>,
-        PaginationState>(builder: (context, state) {
+    return BlocBuilder<CUBIT, PaginationState>(builder: (context, state) {
       if (state is PaginationLoading &&
           (state as PaginationLoading<HEADER, MODEL, KEY>).isFirstFetch) {
-        return Loading(
+        return const Loading(
           showShimmer: true,
         );
         //return _loadingIndicator();
@@ -68,9 +66,7 @@ class PaginationView<HEADER, MODEL extends Sectionabale<HEADER>, KEY,
       }
 
       return RefreshIndicator(
-        onRefresh: () async {
-          await onRefresh();
-        },
+        onRefresh: onRefresh,
         child: CustomScrollView(
             physics: const BouncingScrollPhysics(),
             controller: scrollController,

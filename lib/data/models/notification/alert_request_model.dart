@@ -1,24 +1,22 @@
 import 'package:pagination_with_cubit/data/models/request_model.dart';
 
 class AlertRequestModel implements RequestModel {
-  final String? LastAlertDate;
-  final String? LastGuid;
-  final int PageSize;
+  final String? lastAlertDate;
+  final String? lastGuid;
+  final int pageSize;
 
   AlertRequestModel({
-    this.LastAlertDate,
-    this.LastGuid,
-    required this.PageSize,
+    this.lastAlertDate,
+    this.lastGuid,
+    required this.pageSize,
   });
 
   @override
-  Map<String?, dynamic> toJson() {
-    var x = {
-      // LastAlertDate != null ? 'LastAlertDate' : LastAlertDate: Null,
-      // LastGuid != null ? 'LastGuid' : LastGuid: Null,
-      'PageSize': PageSize,
+  Map<String, dynamic> toJson() {
+    return {
+      'LastAlertDate': lastAlertDate,
+      'LastGuid': lastGuid,
+      'PageSize': pageSize,
     };
-
-    return x;
   }
 }

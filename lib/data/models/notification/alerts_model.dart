@@ -3,9 +3,17 @@ import 'package:pagination_with_cubit/data/models/notification/alert_model.dart'
 
 class AlertsModel {
   List<AlertModel> alerts;
+  bool thereAreMoreAlerts;
   AlertsModel({
     required this.alerts,
+    required this.thereAreMoreAlerts,
   });
 
-  AlertsModel.fromJson(Map<String, dynamic> json) : alerts = json['Alerts'];
+  factory AlertsModel.fromJson(Map<String, dynamic> json) {
+    return AlertsModel(
+        alerts: json['Alerts']
+            ?.map<AlertModel>((json) => AlertModel.fromJson(json))
+            .toList(),
+        thereAreMoreAlerts: json['ThereAreMoreAlerts']);
+  }
 }

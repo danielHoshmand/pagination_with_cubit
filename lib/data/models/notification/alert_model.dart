@@ -1,4 +1,3 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 import '../../../utils/helper/sectionabale.dart';
 
 class AlertModel with Sectionabale<String> {
@@ -27,6 +26,6 @@ class AlertModel with Sectionabale<String> {
 
   @override
   String getHeader() {
-    return date!.substring(0, 10);
+    return 'date!.substring(0, 10)';
   }
 }

@@ -3,11 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pagination_with_cubit/cubit/pagination_cubit.dart';
-import 'package:pagination_with_cubit/data/models/draft_model.dart';
+import 'package:pagination_with_cubit/cubit/sub_cubit/alert_cubit.dart';
 import 'package:pagination_with_cubit/data/models/notification/alert_model.dart';
-import 'package:pagination_with_cubit/data/models/notification/alerts_model.dart';
-import 'package:pagination_with_cubit/data/repositories/draft_repository.dart';
-import 'package:pagination_with_cubit/data/repositories/notification_repository.dart';
 import 'package:pagination_with_cubit/presentation/pagination_view.dart';
 
 import '../data/models/notification/alert_request_model.dart';
@@ -30,21 +27,18 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    BlocProvider.of<
-            PaginationCubit<String, AlertModel, AlertRequestModel,
-                NotificationRepository<AlertRequestModel>>>(context)
-        .loadPosts();
+    BlocProvider.of<AlertCubit>(context)
+        .loadPosts(AlertRequestModel(pageSize: 20));
 
-    return PaginationView<String, AlertModel, AlertRequestModel,
-        NotificationRepository<AlertRequestModel>>(
+    return PaginationView<String, AlertModel, AlertRequestModel, AlertCubit>(
       scrollController: scrollController,
-      initialKey: AlertRequestModel(PageSize: 20),
+      initialKey: AlertRequestModel(pageSize: 20),
       paginationItemViewBuilder: (value) {
         return _notification(value, context);
       },
       headerBuilder: (message) {
         return SliverAppBar(
-          backgroundColor: Color.fromARGB(255, 192, 0, 0),
+          backgroundColor: const Color.fromARGB(255, 192, 0, 0),
           pinned: true,
           flexibleSpace: FlexibleSpaceBar(
             centerTitle: true,
@@ -70,7 +64,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
               child: Center(
                 child: Text(
                   message,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 16.0,
                     color: Colors.red,
                   ),
@@ -80,10 +74,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
           ],
         );
       },
-      onRefresh: () {
-        _loadPost();
-      },
+      onRefresh: _onRefresh,
     );
+  }
+
+  Future<void> _onRefresh() async {
+    await BlocProvider.of<AlertCubit>(context).pullToRefresh();
   }
 
   Widget _notification(AlertModel letter, BuildContext context) {
@@ -101,9 +97,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10.0),
-          Text(letter.date.toString()),
+          Text(letter.title.toString()),
           const SizedBox(height: 10.0),
-          Text(DateTime.parse(letter.date!).toString()),
+          Text(letter.title.toString()),
         ],
       ),
     );
@@ -113,16 +109,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
     scrollController.addListener(() {
       if (scrollController.position.atEdge) {
         if (scrollController.position.pixels != 0) {
-          _loadPost();
+          BlocProvider.of<AlertCubit>(context).loadMore();
         }
       }
     });
-  }
-
-  _loadPost() {
-    BlocProvider.of<
-            PaginationCubit<String, AlertModel, AlertRequestModel,
-                NotificationRepository<AlertRequestModel>>>(context)
-        .loadPosts();
   }
 }
