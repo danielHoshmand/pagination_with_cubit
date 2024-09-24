@@ -40,12 +40,37 @@ class AlertCubit
 
   @override
   Future<void> pullToRefresh() async {
-    super.isFirstLoad = false;
-    super.isPullToRefresh = true;
+    isFirstLoad = false;
+    isPullToRefresh = true;
     await loadPosts(
       AlertRequestModel(
         pageSize: 20,
       ),
     );
+  }
+
+  @override
+  void onLongPress(AlertModel model) {
+    if (!isMultiSelctionMode) {
+      isMultiSelctionMode = true;
+      callMultiSelection(model);
+    }
+  }
+
+  @override
+  void onTap(AlertModel model) {
+    if (isMultiSelctionMode) {
+      callMultiSelection(model);
+    }
+  }
+
+  void callMultiSelection(AlertModel model) {
+    multiSelection(
+        model,
+        AlertRequestModel(
+          lastAlertDate: alerts.last.alertDate,
+          lastGuid: alerts.last.guid,
+          pageSize: 20,
+        ));
   }
 }

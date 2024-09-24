@@ -1,53 +1,68 @@
 abstract class PaginationState<HEADER, MODEL, INPUT> {
-  final INPUT key;
+  final INPUT? key;
+  List<MODEL>? selctedItems = List.empty();
+  final Map<HEADER, List<MODEL>> oldItems;
 
-  PaginationState({required this.key});
+  PaginationState({
+    this.key,
+    this.selctedItems,
+    required this.oldItems,
+  });
 }
 
 class PaginationInitial<HEADER, MODEL, INPUT>
     extends PaginationState<HEADER, MODEL, INPUT> {
-  PaginationInitial({required super.key});
+  PaginationInitial({required super.key, required super.oldItems});
 }
 
 class PaginationLoaded<H, T, I> extends PaginationState<H, T, I> {
-  final Map<H, List<T>> items;
   PaginationLoaded({
-    required this.items,
     required super.key,
+    super.selctedItems,
+    required super.oldItems,
   });
 }
 
 class PaginationLoading<HEADER, MODEL, INPUT>
     extends PaginationState<HEADER, MODEL, INPUT> {
-  final Map<HEADER, List<MODEL>> oldItems;
   final bool isFirstFetch;
 
   PaginationLoading({
-    required this.oldItems,
+    required super.oldItems,
     required super.key,
     this.isFirstFetch = false,
+    super.selctedItems,
   });
 }
 
 class PaginationLoadingMore<HEADER, MODEL, INPUT>
     extends PaginationState<HEADER, MODEL, INPUT> {
-  final Map<HEADER, List<MODEL>> oldItems;
   PaginationLoadingMore({
-    required this.oldItems,
+    required super.oldItems,
     required super.key,
+    super.selctedItems,
+  });
+}
+
+class PaginationMultiSelection<HEADER, MODEL, INPUT>
+    extends PaginationState<HEADER, MODEL, INPUT> {
+  PaginationMultiSelection({
+    super.selctedItems,
+    super.key,
+    required super.oldItems,
   });
 }
 
 class PaginationLoadError<HEADER, MODEL, INPUT>
     extends PaginationState<HEADER, MODEL, INPUT> {
   final String message;
-  final Map<HEADER, List<MODEL>> oldItems;
   final bool isInitialLoad;
 
   PaginationLoadError({
     required super.key,
     required this.message,
-    required this.oldItems,
+    required super.oldItems,
     required this.isInitialLoad,
+    super.selctedItems,
   });
 }

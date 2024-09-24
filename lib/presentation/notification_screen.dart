@@ -31,51 +31,59 @@ class _NotificationScreenState extends State<NotificationScreen> {
         .loadPosts(AlertRequestModel(pageSize: 20));
 
     return PaginationView<String, AlertModel, AlertRequestModel, AlertCubit>(
-      scrollController: scrollController,
-      initialKey: AlertRequestModel(pageSize: 20),
-      paginationItemViewBuilder: (value) {
-        return _notification(value, context);
-      },
-      headerBuilder: (message) {
-        return SliverAppBar(
-          backgroundColor: const Color.fromARGB(255, 192, 0, 0),
-          pinned: true,
-          flexibleSpace: FlexibleSpaceBar(
-            centerTitle: true,
-            title: Text(
-              message,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16.0,
-              ),
-            ),
-          ),
-        );
-      },
-      errorBuider: (message) {
-        return Center(
-          child: Text(message),
-        );
-      },
-      loadMoreErrorSliverBuider: (message) {
-        return SliverMainAxisGroup(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Center(
-                child: Text(
-                  message,
-                  style: const TextStyle(
-                    fontSize: 16.0,
-                    color: Colors.red,
-                  ),
+        scrollController: scrollController,
+        initialKey: AlertRequestModel(pageSize: 20),
+        paginationItemViewBuilder: (value) {
+          return _notification(value, context);
+        },
+        selectedItemBuilder: (value) {
+          return _selctedItem(value, context);
+        },
+        headerBuilder: (message) {
+          return SliverAppBar(
+            backgroundColor: const Color.fromARGB(255, 192, 0, 0),
+            pinned: true,
+            flexibleSpace: FlexibleSpaceBar(
+              centerTitle: true,
+              title: Text(
+                message,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16.0,
                 ),
               ),
-            )
-          ],
-        );
-      },
-      onRefresh: _onRefresh,
-    );
+            ),
+          );
+        },
+        errorBuider: (message) {
+          return Center(
+            child: Text(message),
+          );
+        },
+        loadMoreErrorSliverBuider: (message) {
+          return SliverMainAxisGroup(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Center(
+                  child: Text(
+                    message,
+                    style: const TextStyle(
+                      fontSize: 16.0,
+                      color: Colors.red,
+                    ),
+                  ),
+                ),
+              )
+            ],
+          );
+        },
+        onRefresh: _onRefresh,
+        onLongPress: (alert) {
+          BlocProvider.of<AlertCubit>(context).onLongPress(alert);
+        },
+        onTap: (alert) {
+          BlocProvider.of<AlertCubit>(context).onTap(alert);
+        });
   }
 
   Future<void> _onRefresh() async {
@@ -101,6 +109,32 @@ class _NotificationScreenState extends State<NotificationScreen> {
           const SizedBox(height: 10.0),
           Text(letter.title.toString()),
         ],
+      ),
+    );
+  }
+
+  Widget _selctedItem(AlertModel letter, BuildContext context) {
+    return Container(
+      width: MediaQuery.of(context).size.width,
+      margin: const EdgeInsets.all(10.0),
+      child: Container(
+        color: Colors.red,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              letter.id.toString(),
+              style: const TextStyle(
+                  fontSize: 18.0,
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10.0),
+            Text(letter.title.toString()),
+            const SizedBox(height: 10.0),
+            Text(letter.title.toString()),
+          ],
+        ),
       ),
     );
   }

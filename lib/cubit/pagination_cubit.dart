@@ -11,25 +11,41 @@ abstract class PaginationCubit<HEADER, MODEL extends Sectionabale<HEADER>, KEY>
   KEY page;
   bool isFirstLoad;
   bool isPullToRefresh = false;
+  bool isMultiSelctionMode = false;
+  late KEY key;
 
   PaginationCubit({
     required this.page,
     required this.isFirstLoad,
-  }) : super(PaginationInitial<HEADER, MODEL, KEY>(key: page));
+  }) : super(PaginationInitial<HEADER, MODEL, KEY>(
+            key: page, oldItems: <HEADER, List<MODEL>>{}));
 
   Future<List<MODEL>> fetchData(KEY key);
   void loadMore();
   void pullToRefresh();
+  void onLongPress(MODEL model);
+  void onTap(MODEL model);
 
   Future<void> loadPosts(KEY newKey) async {
+    if (isPullToRefresh) {
+      isMultiSelctionMode = false;
+    }
     if (state is PaginationLoading<HEADER, MODEL, KEY>) {
       return;
     }
     final currentSate = state;
     var oldValues = <HEADER, List<MODEL>>{};
+    List<MODEL> selectedItems = [];
     var key = page;
     if (currentSate is PaginationLoaded<HEADER, MODEL, KEY>) {
-      oldValues = currentSate.items;
+      oldValues = currentSate.oldItems;
+      key = newKey;
+      selectedItems = currentSate.selctedItems ?? [];
+    } else if (currentSate is PaginationMultiSelection<HEADER, MODEL, KEY>) {
+      oldValues = currentSate.oldItems;
+      selectedItems = currentSate.selctedItems != null && !isPullToRefresh
+          ? currentSate.selctedItems!
+          : [];
       key = newKey;
     }
 
@@ -39,6 +55,7 @@ abstract class PaginationCubit<HEADER, MODEL extends Sectionabale<HEADER>, KEY>
           oldItems: oldValues,
           key: key,
           isFirstFetch: isFirstLoad,
+          selctedItems: selectedItems,
         ),
       );
     }
@@ -51,7 +68,7 @@ abstract class PaginationCubit<HEADER, MODEL extends Sectionabale<HEADER>, KEY>
       );
       final oldItems = isPullToRefresh
           ? <HEADER, List<MODEL>>{}
-          : (state as PaginationLoading<HEADER, MODEL, KEY>).oldItems;
+          : (state as PaginationState<HEADER, MODEL, KEY>).oldItems;
       newItems.forEach(
         (header, items) {
           if (oldItems.containsKey(header)) {
@@ -61,17 +78,42 @@ abstract class PaginationCubit<HEADER, MODEL extends Sectionabale<HEADER>, KEY>
           }
         },
       );
-      emit(PaginationLoaded<HEADER, MODEL, KEY>(
-        items: oldItems,
-        key: key,
-      ));
+      if (isMultiSelctionMode) {
+        emit(PaginationMultiSelection<HEADER, MODEL, KEY>(
+          oldItems: oldItems,
+          key: key,
+          selctedItems: selectedItems,
+        ));
+      } else {
+        emit(PaginationLoaded<HEADER, MODEL, KEY>(
+          oldItems: oldItems,
+          key: key,
+          selctedItems: selectedItems,
+        ));
+      }
     } catch (e) {
       emit(PaginationLoadError<HEADER, MODEL, KEY>(
         key: key,
         message: 'Error',
         oldItems: oldValues,
         isInitialLoad: oldValues.isEmpty,
+        selctedItems: selectedItems,
       ));
     }
+  }
+
+  void multiSelection(MODEL model, KEY key) {
+    final oldItems = (state as PaginationState<HEADER, MODEL, KEY>).oldItems;
+    var selectedItems =
+        (state as PaginationState<HEADER, MODEL, KEY>).selctedItems;
+
+    selectedItems!.contains(model)
+        ? selectedItems.remove(model)
+        : selectedItems.add(model);
+    emit(PaginationMultiSelection<HEADER, MODEL, KEY>(
+      selctedItems: selectedItems,
+      oldItems: oldItems,
+      key: key,
+    ));
   }
 }

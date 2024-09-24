@@ -13,20 +13,26 @@ class PaginationView<HEADER, MODEL extends Sectionabale<HEADER>, KEY,
   final ScrollController scrollController;
   final Widget Function(MODEL value) paginationItemViewBuilder;
   final Widget Function(HEADER message)? headerBuilder;
+  final Widget Function(MODEL value)? selectedItemBuilder;
   final KEY initialKey;
   final Widget Function(String message) errorBuider;
   final SliverMainAxisGroup Function(String message) loadMoreErrorSliverBuider;
   final RefreshCallback onRefresh;
+  final Function(MODEL model)? onLongPress;
+  final Function(MODEL model)? onTap;
 
   const PaginationView({
     super.key,
     required this.scrollController,
     required this.paginationItemViewBuilder,
+    this.selectedItemBuilder,
     this.headerBuilder,
     required this.initialKey,
     required this.errorBuider,
     required this.loadMoreErrorSliverBuider,
     required this.onRefresh,
+    this.onLongPress,
+    this.onTap,
   });
 
   @override
@@ -56,11 +62,17 @@ class PaginationView<HEADER, MODEL extends Sectionabale<HEADER>, KEY,
       }
 
       Map<HEADER, List<MODEL>> values = <HEADER, List<MODEL>>{};
+      List<MODEL> selectedItems = List.empty();
 
       if (state is PaginationLoading<HEADER, MODEL, KEY>) {
         values = state.oldItems;
+        selectedItems = state.selctedItems ?? List.empty();
       } else if (state is PaginationLoaded<HEADER, MODEL, KEY>) {
-        values = state.items;
+        values = state.oldItems;
+        selectedItems = state.selctedItems ?? List.empty();
+      } else if (state is PaginationMultiSelection<HEADER, MODEL, KEY>) {
+        values = state.oldItems;
+        selectedItems = state.selctedItems ?? List.empty();
       } else if (state is PaginationLoadError<HEADER, MODEL, KEY>) {
         values = state.oldItems;
       }
@@ -79,18 +91,21 @@ class PaginationView<HEADER, MODEL extends Sectionabale<HEADER>, KEY,
                     )
                   ]
                 : state is PaginationLoadError<HEADER, MODEL, KEY>
-                    ? createSections(values, state) +
+                    ? createSections(values, selectedItems) +
                         [loadMoreErrorSliverBuider(state.message)]
-                    : (state is PaginationLoading<HEADER, MODEL, KEY>
-                        ? createSections(values, state) +
+                    : state is PaginationLoading<HEADER, MODEL, KEY>
+                        ? createSections(values, selectedItems) +
                             [_loadingIndicatorWithSliver()]
-                        : createSections(values, state))),
+                        : state is PaginationMultiSelection<HEADER, MODEL, KEY>
+                            ? createSections(values, selectedItems) +
+                                [_loadingIndicatorWithSliver()]
+                            : createSections(values, selectedItems)),
       );
     });
   }
 
   List<SliverMainAxisGroup> createSections(
-      Map<HEADER, List<MODEL>> values, PaginationState state) {
+      Map<HEADER, List<MODEL>> values, List<MODEL> selectedItems) {
     return values.keys.mapIndexed(
       (i, element) {
         return SliverMainAxisGroup(
@@ -101,7 +116,17 @@ class PaginationView<HEADER, MODEL extends Sectionabale<HEADER>, KEY,
             SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
-                  return paginationItemViewBuilder(values[element]![index]);
+                  return GestureDetector(
+                    child: selectedItems.contains(values[element]![index])
+                        ? selectedItemBuilder!(values[element]![index])
+                        : paginationItemViewBuilder(values[element]![index]),
+                    onLongPress: () {
+                      onLongPress!(values[element]![index]);
+                    },
+                    onTap: () {
+                      onTap!(values[element]![index]);
+                    },
+                  );
                 },
                 childCount: values[element]!.length,
               ),

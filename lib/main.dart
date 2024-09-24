@@ -47,9 +47,6 @@ class PaginationWithCubitApp extends StatelessWidget {
             AlertCubit(
           service: NotificationService(),
           page: AlertRequestModel(pageSize: 20),
-          newKey: (value) {
-            return AlertRequestModel(pageSize: 20);
-          },
           isFirstLoad: true,
           //repository: notificationRepository,
         ),
